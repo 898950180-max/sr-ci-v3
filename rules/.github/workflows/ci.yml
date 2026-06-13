@@ -1,0 +1,44 @@
+name: CI Build Shadowrocket Config
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build config
+        run: |
+          mkdir -p build
+
+          echo "[General]" > build/auto.conf
+          echo "dns-server = 1.1.1.1,8.8.8.8" >> build/auto.conf
+          echo "" >> build/auto.conf
+
+          echo "[Rule]" >> build/auto.conf
+          cat rules/cn.conf >> build/auto.conf
+          echo "" >> build/auto.conf
+
+          cat rules/stream.conf >> build/auto.conf
+          echo "" >> build/auto.conf
+
+          cat rules/ai.conf >> build/auto.conf
+          echo "" >> build/auto.conf
+
+          cat rules/proxy.conf >> build/auto.conf
+          echo "" >> build/auto.conf
+
+          echo "FINAL,DIRECT" >> build/auto.conf
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add build/auto.conf
+          git commit -m "auto build" || exit 0
+          git push
